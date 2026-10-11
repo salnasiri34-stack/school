@@ -435,7 +435,8 @@
                     <button class="nav-tab" onclick="switchTab(4)"><i class="fa-solid fa-user-pen"></i> 5. تعديل السجلات والتحذيرات</button>
                     <button class="nav-tab" onclick="switchTab(5)"><i class="fa-solid fa-user-minus"></i> 6. إزالة المعلمات</button>
                     <button class="nav-tab" onclick="switchTab(6)"><i class="fa-solid fa-envelope"></i> 7. الرسائل والرد عليها</button>
-                    <button class="nav-tab" onclick="switchTab(7)"><i class="fa-solid fa-bullhorn"></i> 8. الإعلانات والتعميمات</button>
+                    <button class="nav-tab" onclick="switchTab(7)"><i class="fa-solid fa-bullhorn"></i> 8. الإعلانات</button>
+                    <button class="nav-tab" onclick="switchTab(8)"><i class="fa-solid fa-user-graduate"></i> 9. تحضير الطلاب</button>
                 </div>
 
                 <!-- 1. تعديل الإعدادات -->
@@ -510,7 +511,7 @@
                                     <th>اسم المستخدم</th>
                                     <th>الرمز السريع (PIN)</th>
                                     <th>حالة الحضور</th>
-                                    <th>حالة التأخير</th>
+                                    <th>حالة التأخير ومدة التأخير</th>
                                     <th>الملاحظات / التحذيرات</th>
                                 </tr>
                             </thead>
@@ -535,11 +536,21 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                         <div class="form-group">
                             <label>حالة التأخير:</label>
-                            <select id="editDelay">
+                            <select id="editDelay" onchange="toggleDelayDurationBox()">
                                 <option value="منتظمة">منتظمة (بدون تأخير)</option>
                                 <option value="تأخير صباحي">تأخير صباحي</option>
                                 <option value="تأخير عن الحصة">تأخير عن الحصة</option>
                                 <option value="استئذان">استئذان</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="delayDurationGroup" style="display:none;">
+                            <label>مدة التأخير:</label>
+                            <select id="editDelayDuration">
+                                <option value="5 دقائق">5 دقائق</option>
+                                <option value="10 دقائق">10 دقائق</option>
+                                <option value="15 دقيقة">15 دقيقة (ربع ساعة)</option>
+                                <option value="30 دقيقة">30 دقيقة (نصف ساعة)</option>
+                                <option value="ساعة كاملة">ساعة كاملة</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -575,7 +586,7 @@
                     <div id="adminMessagesContainer"></div>
                 </div>
 
-                <!-- 8. قسم الإعلانات والتعميمات -->
+                <!-- 8. الإعلانات -->
                 <div class="tab-content">
                     <h3 style="margin-bottom: 12px; color: var(--gov-primary);"><i class="fa-solid fa-bullhorn"></i> لوحة التحكم بالإعلانات والتعميمات الإدارية:</h3>
                     <div class="form-group">
@@ -597,6 +608,50 @@
                         <div id="currentActiveAnnouncementBox" style="background:#f8f9fa; border:1px solid #ddd; padding:15px; border-radius:8px; margin-top:10px;">
                             لا يوجد إعلان نشط حالياً.
                         </div>
+                    </div>
+                </div>
+
+                <!-- 9. لوحة تحضير الطلاب الخاصة بك مع زر التحميل -->
+                <div class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="color: var(--gov-primary);"><i class="fa-solid fa-user-graduate"></i> لوحة تحضير الطلاب الخاصة بي:</h3>
+                        <button class="btn-primary" style="width: auto; background-color: var(--gov-secondary);" onclick="downloadStudentReport()"><i class="fa-solid fa-file-arrow-down"></i> تحميل ملف تقرير التحضير (PDF)</button>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px;">هذه اللوحة خاصة بك وحدك لإدارة وتوزيع وتحضير الطلاب حسب الفصول الدراسية، مع إمكانية تحميل تقرير التحضير لإرساله للمديرة.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; background:#f8f9fa; padding:15px; border-radius:8px;">
+                        <div class="form-group">
+                            <label>اسم الطالب الثلاثي:</label>
+                            <input type="text" id="newStudentName" placeholder="اسم الطالب...">
+                        </div>
+                        <div class="form-group">
+                            <label>الفصل الدراسي:</label>
+                            <input type="text" id="newStudentClass" placeholder="مثال: فصل 2/أ">
+                        </div>
+                        <div class="form-group" style="justify-content: flex-end;">
+                            <button class="btn-primary" onclick="addNewStudent()" style="margin-top: 24px;"><i class="fa-solid fa-plus"></i> إضافة الطالب</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>فلترة الطلاب حسب الفصل:</label>
+                        <select id="filterStudentClassSelect" onchange="renderStudentsList()" style="max-width: 300px;">
+                            <option value="all">جميع الفصول</option>
+                        </select>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>اسم الطالب</th>
+                                    <th>الفصل</th>
+                                    <th>حالة الحضور</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -693,12 +748,14 @@
 
         let teachersData = {};
         let messagesData = {};
+        let studentsData = {};
         let announcementData = null;
         let siteSettings = { title: "منصة تحذير ومتابعة الإداريين والمعلمات", subtitle: "النظام الإداري الموحد والمتابعة اليومية", pin: "2026" };
         let currentUser = null;
 
         const colRef = collection(db, "teachers_portal");
         const msgColRef = collection(db, "admin_messages");
+        const stuColRef = collection(db, "admin_students");
         const settingsDocRef = doc(db, "portal_settings", "config");
         const annDocRef = doc(db, "portal_announcements", "active");
 
@@ -724,6 +781,14 @@
             if (currentUser && currentUser.role === 'teacher') {
                 renderTeacherReplies();
             }
+        });
+
+        onSnapshot(stuColRef, (snapshot) => {
+            studentsData = {};
+            snapshot.forEach((docSnap) => {
+                studentsData[docSnap.id] = docSnap.data();
+            });
+            renderStudentsList();
         });
 
         onSnapshot(settingsDocRef, (docSnap) => {
@@ -866,8 +931,26 @@
             if (!t) return;
             document.getElementById("userInfoLabel").innerText = "المعلمة: " + t.name;
             document.getElementById("teacherWelcomeName").innerHTML = `<i class="fa-solid fa-id-card"></i> أهلاً بكِ أ. ${t.name}`;
-            document.getElementById("portalAttendance").innerText = t.attendance || 'حاضرة';
-            document.getElementById("portalDelay").innerText = t.delay || 'منتظمة';
+            
+            const att = t.attendance || 'حاضرة';
+            const attEl = document.getElementById("portalAttendance");
+            attEl.innerText = att;
+            if (att.includes('غائبة')) {
+                attEl.style.color = "var(--danger)";
+            } else {
+                attEl.style.color = "var(--success)";
+            }
+
+            const del = t.delay || 'منتظمة';
+            const delDuration = t.delayDuration ? ` (${t.delayDuration})` : '';
+            const delEl = document.getElementById("portalDelay");
+            delEl.innerText = del + delDuration;
+            if (del.includes('تأخير')) {
+                delEl.style.color = "var(--warning)";
+            } else {
+                delEl.style.color = "var(--text-main)";
+            }
+
             document.getElementById("portalClass").innerText = t.classRoom || 'غير محدد';
             document.getElementById("portalNotes").innerText = t.notes || 'لا توجد ملاحظات أو تحذيرات مسجلة عليكِ حالياً.';
 
@@ -1004,16 +1087,23 @@
                 editLogSelect.innerHTML += `<option value="${id}">${t.name}</option>`;
 
                 let badgeClass = "badge-success";
-                if (t.attendance && t.attendance.includes('غائبة')) badgeClass = "badge-danger";
-                else if (t.delay && t.delay.includes('تأخير')) badgeClass = "badge-warning";
+                let attColor = "var(--success)";
+                if (t.attendance && t.attendance.includes('غائبة')) {
+                    badgeClass = "badge-danger";
+                    attColor = "var(--danger)";
+                } else if (t.delay && t.delay.includes('تأخير')) {
+                    badgeClass = "badge-warning";
+                }
+
+                const delayText = (t.delay || 'منتظمة') + (t.delayDuration ? ` (${t.delayDuration})` : '');
 
                 fullTable.innerHTML += `
                     <tr>
                         <td><strong>${t.name}</strong></td>
                         <td>${t.username || 'غير محدد'}</td>
                         <td><strong style="color:var(--gov-primary);">${t.pinCode || 'غير محدد'}</strong></td>
-                        <td><span class="badge ${badgeClass}">${t.attendance || 'حاضرة'}</span></td>
-                        <td>${t.delay || 'منتظمة'}</td>
+                        <td><span class="badge ${badgeClass}" style="color:${attColor};">${t.attendance || 'حاضرة'}</span></td>
+                        <td><span style="${t.delay && t.delay.includes('تأخير') ? 'color:var(--warning); font-weight:bold;' : ''}">${delayText}</span></td>
                         <td style="font-size:0.8rem;">${t.notes || 'لا يوجد'}</td>
                     </tr>
                 `;
@@ -1055,9 +1145,21 @@
             if (!id || !teachersData[id]) return;
             const t = teachersData[id];
             document.getElementById("editDelay").value = t.delay || "منتظمة";
+            document.getElementById("editDelayDuration").value = t.delayDuration || "10 دقائق";
             document.getElementById("editAttendance").value = t.attendance || "حاضرة";
             document.getElementById("editClassRoom").value = t.classRoom || "";
             document.getElementById("editNotes").value = t.notes || "";
+            toggleDelayDurationBox();
+        };
+
+        window.toggleDelayDurationBox = function() {
+            const val = document.getElementById("editDelay").value;
+            const group = document.getElementById("delayDurationGroup");
+            if (val.includes('تأخير')) {
+                group.style.display = "flex";
+            } else {
+                group.style.display = "none";
+            }
         };
 
         window.quickWarning = function(type) {
@@ -1066,7 +1168,9 @@
                 document.getElementById("editNotes").value += `\n[تحذير غياب آلي]: تم تسجيل غياب بتاريخ ${new Date().toLocaleDateString('ar-SA')}.`;
             } else if (type === 'تأخير') {
                 document.getElementById("editDelay").value = "تأخير صباحي";
-                document.getElementById("editNotes").value += `\n[تحذير تأخير آلي]: تم تسجيل تأخير بتاريخ ${new Date().toLocaleDateString('ar-SA')}.`;
+                document.getElementById("editDelayDuration").value = "15 دقيقة";
+                document.getElementById("editNotes").value += `\n[تحذير تأخير آلي]: تم تسجيل تأخير صباحي بتاريخ ${new Date().toLocaleDateString('ar-SA')}.`;
+                toggleDelayDurationBox();
             }
         };
 
@@ -1074,7 +1178,9 @@
             const id = document.getElementById("editLogTeacherSelect").value;
             if (!id) return;
 
-            teachersData[id].delay = document.getElementById("editDelay").value;
+            const delayVal = document.getElementById("editDelay").value;
+            teachersData[id].delay = delayVal;
+            teachersData[id].delayDuration = delayVal.includes('تأخير') ? document.getElementById("editDelayDuration").value : "";
             teachersData[id].attendance = document.getElementById("editAttendance").value;
             teachersData[id].classRoom = document.getElementById("editClassRoom").value;
             teachersData[id].notes = document.getElementById("editNotes").value;
@@ -1102,6 +1208,7 @@
                 password: password,
                 pinCode: "",
                 delay: "منتظمة",
+                delayDuration: "",
                 attendance: "حاضرة",
                 classRoom: "غير محدد",
                 notes: "",
@@ -1125,6 +1232,159 @@
                 updateAllDropdownsAndTables();
             }
         };
+
+        // --- نظام تحضير الطلاب والتحميل ---
+        window.addNewStudent = async function() {
+            const sName = document.getElementById("newStudentName").value.trim();
+            const sClass = document.getElementById("newStudentClass").value.trim();
+
+            if (!sName || !sClass) {
+                alert("يرجى إدخال اسم الطالب والفصل.");
+                return;
+            }
+
+            const sId = "student_" + Date.now();
+            const sObj = {
+                name: sName,
+                className: sClass,
+                status: "حاضر"
+            };
+
+            await setDoc(doc(db, "admin_students", sId), sObj);
+            document.getElementById("newStudentName").value = "";
+            document.getElementById("newStudentClass").value = "";
+            alert("تمت إضافة الطالب بنجاح!");
+        };
+
+        window.updateStudentStatus = async function(sId, newStatus) {
+            if (studentsData[sId]) {
+                studentsData[sId].status = newStatus;
+                await setDoc(doc(db, "admin_students", sId), studentsData[sId]);
+            }
+        };
+
+        window.deleteStudent = async function(sId) {
+            if (confirm("هل تريد حذف هذا الطالب؟")) {
+                await deleteDoc(doc(db, "admin_students", sId));
+            }
+        };
+
+        // زر تحميل وتصدير تقرير الطلاب لإرساله للمديرة
+        window.downloadStudentReport = function() {
+            const keys = Object.keys(studentsData);
+            if (keys.length === 0) {
+                alert("لا توجد بيانات طلاب لتحميلها.");
+                return;
+            }
+
+            let reportHtml = `
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>تقرير تحضير الطلاب</title>
+                    <style>
+                        body { font-family: 'Cairo', Tahoma, sans-serif; padding: 20px; color: #2c3e50; }
+                        h2 { text-align: center; color: #1b4d3e; margin-bottom: 5px; }
+                        p.date { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        th, td { border: 1px solid #bdc3c7; padding: 10px; text-align: right; font-size: 0.95rem; }
+                        th { background-color: #1b4d3e; color: white; }
+                        .footer { margin-top: 30px; text-align: left; font-weight: bold; font-size: 0.9rem; }
+                    </style>
+                </head>
+                <body>
+                    <h2>تقرير تحضير وحضور الطلاب اليومي</h2>
+                    <p class="date">تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA')}</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم الطالب</th>
+                                <th>الفصل</th>
+                                <th>حالة الحضور</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            keys.forEach(id => {
+                const s = studentsData[id];
+                reportHtml += `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${s.className}</td>
+                        <td><strong>${s.status}</strong></td>
+                    </tr>
+                `;
+            });
+
+            reportHtml += `
+                        </tbody>
+                    </table>
+                    <div class="footer">
+                        <p>اعتماد الإدارة / المشرف</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([reportHtml], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `تقرير_تحضير_الطلاب_${new Date().toLocaleDateString('ar-SA').replace(/\//g, '-')}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        function renderStudentsList() {
+            const tableBody = document.getElementById("studentsTableBody");
+            const filterSelect = document.getElementById("filterStudentClassSelect");
+            tableBody.innerHTML = "";
+
+            const classesSet = new Set();
+            Object.keys(studentsData).forEach(id => {
+                classesSet.add(studentsData[id].className);
+            });
+
+            const currentFilter = filterSelect.value;
+            filterSelect.innerHTML = `<option value="all">جميع الفصول</option>`;
+            classesSet.forEach(cName => {
+                filterSelect.innerHTML += `<option value="${cName}" ${currentFilter === cName ? 'selected' : ''}>${cName}</option>`;
+            });
+
+            const keys = Object.keys(studentsData);
+            if (keys.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">لا توجد طلاب مسجلين حالياً.</td></tr>`;
+                return;
+            }
+
+            keys.forEach(id => {
+                const s = studentsData[id];
+                const selectedClass = document.getElementById("filterStudentClassSelect").value;
+
+                if (selectedClass === 'all' || s.className === selectedClass) {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td><strong>${s.name}</strong></td>
+                            <td>${s.className}</td>
+                            <td>
+                                <select onchange="updateStudentStatus('${id}', this.value)" style="padding:5px; border-radius:4px; font-weight:bold;">
+                                    <option value="حاضر" ${s.status === 'حاضر' ? 'selected' : ''}>حاضر</option>
+                                    <option value="غائب" ${s.status === 'غائب' ? 'selected' : ''}>غائب</option>
+                                    <option value="متأخر" ${s.status === 'متأخر' ? 'selected' : ''}>متأخر</option>
+                                    <option value="معذور" ${s.status === 'معذور' ? 'selected' : ''}>معذور</option>
+                                </select>
+                            </td>
+                            <td>
+                                <button onclick="deleteStudent('${id}')" style="background:var(--danger); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;"><i class="fa-solid fa-trash"></i> حذف</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+        }
 
         window.sendMessageToAdmin = async function() {
             const msgText = document.getElementById("teacherMessageText").value.trim();
